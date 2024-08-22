@@ -1,0 +1,64 @@
+// 모터 드라이버 핀 설정
+#define PWM1 9        // 모터 1의 속도 제어를 위한 PWM 핀
+#define DIR1 8        // 모터 1의 방향 제어 핀
+#define PWM2 10       // 모터 2의 속도 제어를 위한 PWM 핀
+#define DIR2 7        // 모터 2의 방향 제어 핀
+
+// 조이스틱 핀 설정
+#define JOY_X A0      // 조이스틱 X축
+#define JOY_Y A1      // 조이스틱 Y축
+
+void setup() {
+  // 시리얼 통신 초기화
+  Serial.begin(9600);
+
+  // 아두이노 핀을 모터 드라이버에 입력값으로 줘야하기 때문에 출력으로 설정
+  pinMode(PWM1, OUTPUT);
+  pinMode(DIR1, OUTPUT);
+  pinMode(PWM2, OUTPUT);
+  pinMode(DIR2, OUTPUT);
+
+  // 조이스틱 핀을 입력으로 설정하여 값 받아 아두이노에서 연산후 모터 출력으로
+  pinMode(JOY_X, INPUT);
+  pinMode(JOY_Y, INPUT);
+}
+
+void loop() {
+  // 조이스틱 값 읽기
+  int xValue = analogRead(JOY_X);  // X축 값 읽기
+  int yValue = analogRead(JOY_Y);  // Y축 값 읽기
+
+  // 조이스틱 Y축 값을 모터 속도 (0-255)로 매핑 매핑하여 밑에 모터 스피드로 바로 집어 넣어서 조이스틱 입력값을 모터로 바꿈
+  int motorSpeed = map(abs(yValue - 512), 0, 512, 0, 255);
+
+  // Y축 값에 따라 모터 방향 설정
+  if (yValue > 530) { // 전진
+    digitalWrite(DIR1, HIGH);  // 모터 1 전진
+    digitalWrite(DIR2, HIGH);  // 모터 2 전진
+  }
+  else if (yValue < 490) { // 후진
+    digitalWrite(DIR1, LOW);   // 모터 1 후진
+    digitalWrite(DIR2, LOW);   // 모터 2 후진
+  }
+  else { // 정지
+    motorSpeed = 0;
+  }
+
+  // X축 값에 따라 방향 전환 설정
+  if (xValue > 530) { // 우회전
+    digitalWrite(DIR1, HIGH);  // 모터 1 전진
+    digitalWrite(DIR2, LOW);   // 모터 2 후진
+  }
+  else if (xValue < 490) { // 좌회전
+    digitalWrite(DIR1, LOW);   // 모터 1 후진
+    digitalWrite(DIR2, HIGH);  // 모터 2 전진
+  }
+
+  // 모터 속도 설정
+  analogWrite(PWM1, motorSpeed);
+  analogWrite(PWM2, motorSpeed);
+
+  // 값 안정화를 위한 짧은 딜레이
+  delay(50);
+}
+
